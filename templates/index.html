@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Gemini Chatbot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="chatbot-container">
+        <header class="chatbot-header">
+            <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" alt="Bot" class="chatbot-avatar">
+            <h1>Gemini Chatbot</h1>
+        </header>
+        <main id="chatbox" class="chatbox"></main>
+        <form id="input-form" autocomplete="off">
+            <input id="input-field" type="text" placeholder="Type your message..." autofocus autocomplete="off">
+            <button id="submit-button" type="submit">
+                <span>➤</span>
+            </button>
+        </form>
+    </div>
+    <script>
+        const chatbox = document.getElementById('chatbox');
+        const form = document.getElementById('input-form');
+        const input = document.getElementById('input-field');
+
+        function addMessage(message, sender = 'user') {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender}`;
+            msgDiv.innerHTML = `
+                <div class="avatar">${sender === 'user' ? '🧑' : '🤖'}</div>
+                <div class="bubble">${message}</div>
+            `;
+            chatbox.appendChild(msgDiv);
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const userMsg = input.value.trim();
+            if (!userMsg) return;
+            addMessage(userMsg, 'user');
+            input.value = '';
+            addMessage('...', 'bot'); // loading indicator
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message: userMsg})
+            });
+            const data = await response.json();
+            // Remove loading
+            chatbox.removeChild(chatbox.lastChild);
+            addMessage(data.reply, 'bot');
+        };
+    </script>
+</body>
+</html>
